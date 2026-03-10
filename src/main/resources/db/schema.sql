@@ -12,3 +12,9 @@ CREATE TABLE IF NOT EXISTS post_tags (
     PRIMARY KEY (post_id, tag),
     CONSTRAINT fk_post_tags_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS post_images (
+    post_id BIGINT PRIMARY KEY,
+    image_data BYTEA NOT NULL,
+    CONSTRAINT fk_post_images_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);

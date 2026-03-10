@@ -8,12 +8,17 @@ import ru.yandex.practicum.blog.model.Post;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
 import ru.yandex.practicum.blog.service.PostService;
 
+import java.util.Base64;
 import java.util.List;
 
 @Service
 public class DefaultPostService implements PostService {
     private static final int FEED_TEXT_LIMIT = 128;
     private static final String ELLIPSIS = "\u2026";
+    private static final byte[] DEFAULT_IMAGE_BYTES = Base64.getDecoder().decode(
+            // 1x1 transparent PNG fallback while image upload endpoint is not implemented yet.
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO3Z4t0AAAAASUVORK5CYII="
+    );
 
     private final PostDao postDao;
 
@@ -57,6 +62,16 @@ public class DefaultPostService implements PostService {
                 pageNumber < lastPage,
                 lastPage
         );
+    }
+
+    @Override
+    public byte[] getPostImage(long id) {
+        if (postDao.findById(id).isEmpty()) {
+            throw new PostNotFoundException(id);
+        }
+
+        return postDao.findImageByPostId(id)
+                .orElse(DEFAULT_IMAGE_BYTES);
     }
 
     private PostResponse toFeedResponse(Post post) {

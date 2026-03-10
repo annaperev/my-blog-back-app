@@ -7,4 +7,6 @@ public interface PostService {
     PostResponse getPostById(long id);
 
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);
+
+    byte[] getPostImage(long id);
 }

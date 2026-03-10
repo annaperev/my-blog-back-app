@@ -22,4 +22,9 @@ public interface PostDao {
      * Total amount of posts, used to calculate paging metadata.
      */
     long countAll();
+
+    /**
+     * Reads raw image bytes linked to a post id.
+     */
+    Optional<byte[]> findImageByPostId(long id);
 }

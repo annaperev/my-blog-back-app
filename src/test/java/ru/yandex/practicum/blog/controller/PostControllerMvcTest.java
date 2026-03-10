@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.blog.config.WebMvcConfig;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -83,6 +84,26 @@ class PostControllerMvcTest {
     @Test
     void postApiPostsIdShouldReturn404WhenMissing() throws Exception {
         mockMvc.perform(post("/api/posts/{id}", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    void getApiPostsIdImageShouldReturnPngBytes() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/image", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.IMAGE_PNG))
+                .andExpect(result -> assertTrue(result.getResponse().getContentAsByteArray().length > 0));
+    }
+
+    @Test
+    void getApiPostsIdImageShouldReturn404WhenPostMissing() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/image", 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""

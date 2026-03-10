@@ -57,6 +57,14 @@ class DefaultPostServiceTest {
         public long countAll() {
             return POSTS.size();
         }
+
+        @Override
+        public Optional<byte[]> findImageByPostId(long id) {
+            if (id == 1L) {
+                return Optional.of(new byte[]{1, 2, 3});
+            }
+            return Optional.empty();
+        }
     };
 
     private final PostService postService = new DefaultPostService(testDao);
@@ -87,5 +95,16 @@ class DefaultPostServiceTest {
         assertFalse(response.hasPrev());
         assertTrue(response.hasNext());
         assertEquals(2, response.lastPage());
+    }
+
+    @Test
+    void getPostImageShouldReturnStoredBytes() {
+        byte[] image = postService.getPostImage(1L);
+        assertEquals(3, image.length);
+    }
+
+    @Test
+    void getPostImageShouldThrowWhenPostMissing() {
+        assertThrows(PostNotFoundException.class, () -> postService.getPostImage(999L));
     }
 }

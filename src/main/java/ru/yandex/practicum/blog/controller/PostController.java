@@ -1,6 +1,8 @@
 package ru.yandex.practicum.blog.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,5 +46,13 @@ public class PostController {
     @PostMapping("/{id}")
     public PostResponse getPost(@PathVariable("id") long id) {
         return postService.getPostById(id);
+    }
+
+    /**
+     * GET /api/posts/{id}/image
+     */
+    @GetMapping(value = "/{id}/image", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getPostImage(@PathVariable("id") long id) {
+        return ResponseEntity.ok(postService.getPostImage(id));
     }
 }

@@ -1,3 +1,4 @@
+DELETE FROM post_images;
 DELETE FROM post_tags;
 DELETE FROM posts;
 

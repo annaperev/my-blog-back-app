@@ -86,6 +86,21 @@ public class JdbcPostDao implements PostDao {
         return count == null ? 0L : count;
     }
 
+    @Override
+    public Optional<byte[]> findImageByPostId(long id) {
+        List<byte[]> images = jdbcTemplate.query(
+                "SELECT image_data FROM post_images WHERE post_id = ?",
+                (resultSet, ignoredRowNum) -> resultSet.getBytes("image_data"),
+                id
+        );
+
+        if (images.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(images.getFirst());
+    }
+
     /**
      * Batched tag loading avoids "N+1 queries" when returning feed pages.
      */
