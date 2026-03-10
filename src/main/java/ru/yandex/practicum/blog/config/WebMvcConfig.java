@@ -3,7 +3,9 @@ package ru.yandex.practicum.blog.config;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Central MVC config for DispatcherServlet context.
@@ -14,5 +16,20 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @EnableWebMvc
 @Import(DataConfig.class)
 @ComponentScan(basePackages = "ru.yandex.practicum.blog")
-public class WebMvcConfig {
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    /**
+     * CORS (Cross-Origin Resource Sharing) policy for browser clients.
+     * Browser blocks JS access to responses from another origin unless server explicitly allows it.
+     *
+     * Frontend origin in this project: http://localhost
+     * Backend origin in this project:  http://localhost:8080
+     */
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*");
+    }
 }

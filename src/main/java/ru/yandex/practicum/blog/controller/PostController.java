@@ -1,9 +1,14 @@
 package ru.yandex.practicum.blog.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
 import ru.yandex.practicum.blog.service.PostService;
 
@@ -17,6 +22,20 @@ public class PostController {
 
     public PostController(PostService postService) {
         this.postService = postService;
+    }
+
+    /**
+     * GET /api/posts?search=...&pageNumber=...&pageSize=...
+     */
+    @GetMapping
+    public PostPageResponse getPosts(@RequestParam("search") String search,
+                                     @RequestParam("pageNumber") int pageNumber,
+                                     @RequestParam("pageSize") int pageSize) {
+        if (pageNumber < 1 || pageSize < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pageNumber and pageSize must be positive");
+        }
+
+        return postService.getPosts(search, pageNumber, pageSize);
     }
 
     /**

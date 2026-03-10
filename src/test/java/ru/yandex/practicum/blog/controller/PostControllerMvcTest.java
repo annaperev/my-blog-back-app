@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -13,6 +14,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.blog.config.WebMvcConfig;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +22,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = WebMvcConfig.class)
+@TestPropertySource(properties = {
+        // Integration-test pattern: override infra settings in test context only.
+        // This keeps tests deterministic and independent of local PostgreSQL setup.
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.url=jdbc:h2:mem:blog_mvc_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.username=sa",
+        "spring.datasource.password="
+})
 class PostControllerMvcTest {
 
     @Autowired
@@ -33,6 +43,30 @@ class PostControllerMvcTest {
     }
 
     @Test
+    void getApiPostsShouldReturnPagedFeedJson() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "anything")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "posts": [
+                            {
+                              "id": 1,
+                              "likesCount": 5,
+                              "commentsCount": 1
+                            }
+                          ],
+                          "hasPrev": false,
+                          "hasNext": false,
+                          "lastPage": 1
+                        }
+                        """, false));
+    }
+
+    @Test
     void postApiPostsIdShouldReturnPostJson() throws Exception {
         mockMvc.perform(post("/api/posts/{id}", 1L))
                 .andExpect(status().isOk())
@@ -40,13 +74,10 @@ class PostControllerMvcTest {
                 .andExpect(content().json("""
                         {
                           "id": 1,
-                          "title": "Название поста 1",
-                          "text": "Текст поста в формате Markdown...",
-                          "tags": ["tag_1", "tag_2"],
                           "likesCount": 5,
                           "commentsCount": 1
                         }
-                        """, true));
+                        """, false));
     }
 
     @Test

@@ -4,8 +4,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.blog.model.Post;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * PostgreSQL-based DAO.
@@ -53,5 +56,78 @@ public class JdbcPostDao implements PostDao {
                 postWithoutTags.likesCount(),
                 postWithoutTags.commentsCount()
         ));
+    }
+
+    @Override
+    public List<Post> findPage(int pageNumber, int pageSize) {
+        long offset = (long) (pageNumber - 1) * pageSize;
+
+        List<Post> postsWithoutTags = jdbcTemplate.query(
+                "SELECT id, title, text, likes_count, comments_count " +
+                        "FROM posts ORDER BY id DESC LIMIT ? OFFSET ?",
+                (resultSet, ignoredRowNum) -> new Post(
+                        resultSet.getLong("id"),
+                        resultSet.getString("title"),
+                        resultSet.getString("text"),
+                        List.of(),
+                        resultSet.getLong("likes_count"),
+                        resultSet.getLong("comments_count")
+                ),
+                pageSize,
+                offset
+        );
+
+        return attachTags(postsWithoutTags);
+    }
+
+    @Override
+    public long countAll() {
+        Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM posts", Long.class);
+        return count == null ? 0L : count;
+    }
+
+    /**
+     * Batched tag loading avoids "N+1 queries" when returning feed pages.
+     */
+    private List<Post> attachTags(List<Post> postsWithoutTags) {
+        if (postsWithoutTags.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = postsWithoutTags.stream()
+                .map(Post::id)
+                .toList();
+        String placeholders = postIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        List<TagRow> tagRows = jdbcTemplate.query(
+                "SELECT post_id, tag FROM post_tags WHERE post_id IN (" + placeholders + ") ORDER BY post_id, tag",
+                (rs, rowNum) -> new TagRow(
+                        rs.getLong("post_id"),
+                        rs.getString("tag")
+                ),
+                postIds.toArray()
+        );
+
+        Map<Long, List<String>> tagsByPostId = new HashMap<>();
+        for (TagRow tagRow : tagRows) {
+            tagsByPostId.computeIfAbsent(tagRow.postId(), ignored -> new java.util.ArrayList<>())
+                    .add(tagRow.tag());
+        }
+
+        return postsWithoutTags.stream()
+                .map(post -> new Post(
+                        post.id(),
+                        post.title(),
+                        post.text(),
+                        tagsByPostId.getOrDefault(post.id(), List.of()),
+                        post.likesCount(),
+                        post.commentsCount()
+                ))
+                .toList();
+    }
+
+    private record TagRow(long postId, String tag) {
     }
 }
