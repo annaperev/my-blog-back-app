@@ -1,7 +1,10 @@
 package ru.yandex.practicum.blog.service;
 
+import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+
+import java.util.List;
 
 public interface PostService {
     PostResponse getPostById(long id);
@@ -9,4 +12,6 @@ public interface PostService {
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);
 
     byte[] getPostImage(long id);
+
+    List<CommentResponse> getCommentsByPostId(long postId);
 }

@@ -18,3 +18,10 @@ CREATE TABLE IF NOT EXISTS post_images (
     image_data BYTEA NOT NULL,
     CONSTRAINT fk_post_images_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS comments (
+    id BIGINT PRIMARY KEY,
+    text TEXT NOT NULL,
+    post_id BIGINT NOT NULL,
+    CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);

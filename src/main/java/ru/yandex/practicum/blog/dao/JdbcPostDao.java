@@ -2,6 +2,7 @@ package ru.yandex.practicum.blog.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 
 import java.util.HashMap;
@@ -99,6 +100,19 @@ public class JdbcPostDao implements PostDao {
         }
 
         return Optional.ofNullable(images.getFirst());
+    }
+
+    @Override
+    public List<Comment> findCommentsByPostId(long postId) {
+        return jdbcTemplate.query(
+                "SELECT id, text, post_id FROM comments WHERE post_id = ? ORDER BY id",
+                (resultSet, ignoredRowNum) -> new Comment(
+                        resultSet.getLong("id"),
+                        resultSet.getString("text"),
+                        resultSet.getLong("post_id")
+                ),
+                postId
+        );
     }
 
     /**

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.blog.dao;
 
+import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 
 import java.util.List;
@@ -27,4 +28,9 @@ public interface PostDao {
      * Reads raw image bytes linked to a post id.
      */
     Optional<byte[]> findImageByPostId(long id);
+
+    /**
+     * Returns comments for one post in stable order (oldest first by id).
+     */
+    List<Comment> findCommentsByPostId(long postId);
 }

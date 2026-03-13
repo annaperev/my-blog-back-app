@@ -58,6 +58,11 @@ class PostControllerMvcTest {
                               "id": 1,
                               "likesCount": 5,
                               "commentsCount": 1
+                            },
+                            {
+                              "id": 2,
+                              "likesCount": 2,
+                              "commentsCount": 2
                             }
                           ],
                           "hasPrev": false,
@@ -69,7 +74,7 @@ class PostControllerMvcTest {
 
     @Test
     void postApiPostsIdShouldReturnPostJson() throws Exception {
-        mockMvc.perform(post("/api/posts/{id}", 1L))
+        mockMvc.perform(get("/api/posts/{id}", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
@@ -83,7 +88,7 @@ class PostControllerMvcTest {
 
     @Test
     void postApiPostsIdShouldReturn404WhenMissing() throws Exception {
-        mockMvc.perform(post("/api/posts/{id}", 999L))
+        mockMvc.perform(get("/api/posts/{id}", 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
@@ -104,6 +109,34 @@ class PostControllerMvcTest {
     @Test
     void getApiPostsIdImageShouldReturn404WhenPostMissing() throws Exception {
         mockMvc.perform(get("/api/posts/{id}/image", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    void getApiPostsIdCommentsShouldReturnCommentsJson() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/comments", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        [
+                          {
+                            "id": 1,
+                            "text": "Comment for post 1",
+                            "postId": 1
+                          }
+                        ]
+                        """, true));
+    }
+
+    @Test
+    void getApiPostsIdCommentsShouldReturn404WhenPostMissing() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/comments", 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""

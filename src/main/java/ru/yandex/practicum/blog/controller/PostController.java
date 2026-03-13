@@ -5,14 +5,16 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
 import ru.yandex.practicum.blog.service.PostService;
+
+import java.util.List;
 
 /**
  * REST controller exposing blog post endpoints.
@@ -41,9 +43,9 @@ public class PostController {
     }
 
     /**
-     * POST /api/posts/{id}
+     * GET /api/posts/{id}
      */
-    @PostMapping("/{id}")
+    @GetMapping("/{id}")
     public PostResponse getPost(@PathVariable("id") long id) {
         return postService.getPostById(id);
     }
@@ -54,5 +56,13 @@ public class PostController {
     @GetMapping(value = "/{id}/image", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getPostImage(@PathVariable("id") long id) {
         return ResponseEntity.ok(postService.getPostImage(id));
+    }
+
+    /**
+     * GET /api/posts/{id}/comments
+     */
+    @GetMapping("/{id}/comments")
+    public List<CommentResponse> getPostComments(@PathVariable("id") long id) {
+        return postService.getCommentsByPostId(id);
     }
 }

@@ -2,8 +2,10 @@ package ru.yandex.practicum.blog.service.impl;
 
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.blog.dao.PostDao;
+import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
 import ru.yandex.practicum.blog.service.PostService;
@@ -74,6 +76,17 @@ public class DefaultPostService implements PostService {
                 .orElse(DEFAULT_IMAGE_BYTES);
     }
 
+    @Override
+    public List<CommentResponse> getCommentsByPostId(long postId) {
+        if (postDao.findById(postId).isEmpty()) {
+            throw new PostNotFoundException(postId);
+        }
+
+        return postDao.findCommentsByPostId(postId).stream()
+                .map(this::toCommentResponse)
+                .toList();
+    }
+
     private PostResponse toFeedResponse(Post post) {
         return new PostResponse(
                 post.id(),
@@ -90,5 +103,13 @@ public class DefaultPostService implements PostService {
             return text;
         }
         return text.substring(0, FEED_TEXT_LIMIT) + ELLIPSIS;
+    }
+
+    private CommentResponse toCommentResponse(Comment comment) {
+        return new CommentResponse(
+                comment.id(),
+                comment.text(),
+                comment.postId()
+        );
     }
 }

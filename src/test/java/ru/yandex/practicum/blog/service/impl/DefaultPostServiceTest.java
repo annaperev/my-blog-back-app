@@ -2,8 +2,10 @@ package ru.yandex.practicum.blog.service.impl;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.blog.dao.PostDao;
+import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
 import ru.yandex.practicum.blog.service.PostService;
@@ -37,6 +39,11 @@ class DefaultPostServiceTest {
                     5L
             )
     );
+    private static final List<Comment> COMMENTS = List.of(
+            new Comment(1L, "First comment", 1L),
+            new Comment(2L, "Second comment", 1L),
+            new Comment(3L, "Comment for post 2", 2L)
+    );
 
     private final PostDao testDao = new PostDao() {
         @Override
@@ -64,6 +71,13 @@ class DefaultPostServiceTest {
                 return Optional.of(new byte[]{1, 2, 3});
             }
             return Optional.empty();
+        }
+
+        @Override
+        public List<Comment> findCommentsByPostId(long postId) {
+            return COMMENTS.stream()
+                    .filter(comment -> comment.postId() == postId)
+                    .toList();
         }
     };
 
@@ -106,5 +120,21 @@ class DefaultPostServiceTest {
     @Test
     void getPostImageShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.getPostImage(999L));
+    }
+
+    @Test
+    void getCommentsByPostIdShouldReturnComments() {
+        List<CommentResponse> comments = postService.getCommentsByPostId(1L);
+
+        assertEquals(2, comments.size());
+        assertEquals(1L, comments.getFirst().id());
+        assertEquals("First comment", comments.getFirst().text());
+        assertEquals(1L, comments.getFirst().postId());
+        assertEquals("Second comment", comments.get(1).text());
+    }
+
+    @Test
+    void getCommentsByPostIdShouldThrowWhenPostMissing() {
+        assertThrows(PostNotFoundException.class, () -> postService.getCommentsByPostId(999L));
     }
 }
