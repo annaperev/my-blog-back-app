@@ -3,6 +3,7 @@ package ru.yandex.practicum.blog.service.impl;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.blog.dao.PostDao;
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
 import ru.yandex.practicum.blog.model.Comment;
@@ -46,6 +47,11 @@ class DefaultPostServiceTest {
     );
 
     private final PostDao testDao = new PostDao() {
+        @Override
+        public Post create(String title, String text, List<String> tags) {
+            return new Post(3L, title, text, tags, 0L, 0L);
+        }
+
         @Override
         public Optional<Post> findById(long id) {
             return POSTS.stream()
@@ -98,6 +104,24 @@ class DefaultPostServiceTest {
     @Test
     void getPostByIdShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.getPostById(999L));
+    }
+
+    @Test
+    void createPostShouldReturnCreatedPostWithZeroCounters() {
+        CreatePostRequest request = new CreatePostRequest(
+                "New post",
+                "New text",
+                List.of("java", "spring")
+        );
+
+        PostResponse response = postService.createPost(request);
+
+        assertEquals(3L, response.id());
+        assertEquals("New post", response.title());
+        assertEquals("New text", response.text());
+        assertEquals(List.of("java", "spring"), response.tags());
+        assertEquals(0L, response.likesCount());
+        assertEquals(0L, response.commentsCount());
     }
 
     @Test

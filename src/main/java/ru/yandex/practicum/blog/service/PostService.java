@@ -1,12 +1,15 @@
 package ru.yandex.practicum.blog.service;
 
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
 
 import java.util.List;
 
 public interface PostService {
+    PostResponse createPost(CreatePostRequest request);
+
     PostResponse getPostById(long id);
 
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);

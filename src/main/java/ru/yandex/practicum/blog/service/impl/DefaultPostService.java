@@ -3,6 +3,7 @@ package ru.yandex.practicum.blog.service.impl;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.blog.dao.PostDao;
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
 import ru.yandex.practicum.blog.model.Comment;
@@ -26,6 +27,12 @@ public class DefaultPostService implements PostService {
 
     public DefaultPostService(PostDao postDao) {
         this.postDao = postDao;
+    }
+
+    @Override
+    public PostResponse createPost(CreatePostRequest request) {
+        Post createdPost = postDao.create(request.title(), request.text(), request.tags());
+        return toResponse(createdPost);
     }
 
     @Override

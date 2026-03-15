@@ -3,9 +3,11 @@ DELETE FROM post_images;
 DELETE FROM post_tags;
 DELETE FROM posts;
 
-INSERT INTO posts (id, title, text, likes_count, comments_count)
-VALUES (1, 'Название поста 1', 'Текст поста в формате Markdown...', 5, 1),
-       (2, 'Название поста 2', 'Текст поста в формате Markdown...', 2, 2);
+ALTER TABLE posts ALTER COLUMN id RESTART WITH 1;
+
+INSERT INTO posts (title, text, likes_count, comments_count)
+VALUES ('Название поста 1', 'Текст поста в формате Markdown...', 5, 1),
+       ('Название поста 2', 'Текст поста в формате Markdown...', 2, 2);
 
 INSERT INTO post_tags (post_id, tag)
 VALUES (1, 'tag_1'),

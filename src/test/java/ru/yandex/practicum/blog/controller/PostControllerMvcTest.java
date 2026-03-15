@@ -99,6 +99,31 @@ class PostControllerMvcTest {
     }
 
     @Test
+    void postApiPostsShouldCreatePostAndReturnJson() throws Exception {
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "title": "Post from test",
+                                  "text": "Markdown text",
+                                  "tags": ["java", "spring"]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "id": 3,
+                          "title": "Post from test",
+                          "text": "Markdown text",
+                          "tags": ["java", "spring"],
+                          "likesCount": 0,
+                          "commentsCount": 0
+                        }
+                        """, true));
+    }
+
+    @Test
     void getApiPostsIdImageShouldReturnPngBytes() throws Exception {
         mockMvc.perform(get("/api/posts/{id}/image", 1L))
                 .andExpect(status().isOk())

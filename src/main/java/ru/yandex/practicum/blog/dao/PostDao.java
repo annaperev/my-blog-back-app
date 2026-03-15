@@ -11,6 +11,11 @@ import java.util.Optional;
  * Common Dependency Inversion Principle usage.
  */
 public interface PostDao {
+    /**
+     * Creates a new post with initial counters set by backend rules.
+     */
+    Post create(String title, String text, List<String> tags);
+
     Optional<Post> findById(long id);
 
     /**
