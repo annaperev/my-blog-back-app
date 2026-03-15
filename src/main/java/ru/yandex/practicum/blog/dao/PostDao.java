@@ -16,6 +16,11 @@ public interface PostDao {
      */
     Post create(String title, String text, List<String> tags);
 
+    /**
+     * Updates editable post fields and replaces tags with the provided list.
+     */
+    Optional<Post> update(long id, String title, String text, List<String> tags);
+
     Optional<Post> findById(long id);
 
     /**

@@ -17,6 +17,7 @@ import ru.yandex.practicum.blog.config.WebMvcConfig;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -119,6 +120,53 @@ class PostControllerMvcTest {
                           "tags": ["java", "spring"],
                           "likesCount": 0,
                           "commentsCount": 0
+                        }
+                        """, true));
+    }
+
+    @Test
+    void putApiPostsIdShouldUpdatePostAndReturnJson() throws Exception {
+        mockMvc.perform(put("/api/posts/{id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 1,
+                                  "title": "Updated title",
+                                  "text": "Updated markdown text",
+                                  "tags": ["backend", "java"]
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "id": 1,
+                          "title": "Updated title",
+                          "text": "Updated markdown text",
+                          "tags": ["backend", "java"],
+                          "likesCount": 5,
+                          "commentsCount": 1
+                        }
+                        """, true));
+    }
+
+    @Test
+    void putApiPostsIdShouldReturn404WhenMissing() throws Exception {
+        mockMvc.perform(put("/api/posts/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 999,
+                                  "title": "Updated title",
+                                  "text": "Updated markdown text",
+                                  "tags": ["backend", "java"]
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
                         }
                         """, true));
     }

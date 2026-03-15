@@ -58,6 +58,30 @@ public class JdbcPostDao implements PostDao {
     }
 
     @Override
+    public Optional<Post> update(long id, String title, String text, List<String> tags) {
+        int updatedRows = jdbcTemplate.update(
+                "UPDATE posts SET title = ?, text = ? WHERE id = ?",
+                title,
+                text,
+                id
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+
+        jdbcTemplate.update("DELETE FROM post_tags WHERE post_id = ?", id);
+        for (String tag : tags) {
+            jdbcTemplate.update(
+                    "INSERT INTO post_tags (post_id, tag) VALUES (?, ?)",
+                    id,
+                    tag
+            );
+        }
+
+        return findById(id);
+    }
+
+    @Override
     public Optional<Post> findById(long id) {
         List<Post> posts = jdbcTemplate.query(
                 "SELECT id, title, text, likes_count, comments_count FROM posts WHERE id = ?",

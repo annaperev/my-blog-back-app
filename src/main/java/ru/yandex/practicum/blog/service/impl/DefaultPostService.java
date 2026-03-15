@@ -6,6 +6,7 @@ import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
@@ -33,6 +34,13 @@ public class DefaultPostService implements PostService {
     public PostResponse createPost(CreatePostRequest request) {
         Post createdPost = postDao.create(request.title(), request.text(), request.tags());
         return toResponse(createdPost);
+    }
+
+    @Override
+    public PostResponse updatePost(UpdatePostRequest request) {
+        Post updatedPost = postDao.update(request.id(), request.title(), request.text(), request.tags())
+                .orElseThrow(() -> new PostNotFoundException(request.id()));
+        return toResponse(updatedPost);
     }
 
     @Override

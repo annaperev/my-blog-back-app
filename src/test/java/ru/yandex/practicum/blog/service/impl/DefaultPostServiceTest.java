@@ -6,6 +6,7 @@ import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
@@ -50,6 +51,14 @@ class DefaultPostServiceTest {
         @Override
         public Post create(String title, String text, List<String> tags) {
             return new Post(3L, title, text, tags, 0L, 0L);
+        }
+
+        @Override
+        public Optional<Post> update(long id, String title, String text, List<String> tags) {
+            if (id == 1L) {
+                return Optional.of(new Post(id, title, text, tags, 5L, 1L));
+            }
+            return Optional.empty();
         }
 
         @Override
@@ -122,6 +131,37 @@ class DefaultPostServiceTest {
         assertEquals(List.of("java", "spring"), response.tags());
         assertEquals(0L, response.likesCount());
         assertEquals(0L, response.commentsCount());
+    }
+
+    @Test
+    void updatePostShouldReturnUpdatedPostAndKeepCounters() {
+        UpdatePostRequest request = new UpdatePostRequest(
+                1L,
+                "Updated title",
+                "Updated text",
+                List.of("updated_tag")
+        );
+
+        PostResponse response = postService.updatePost(request);
+
+        assertEquals(1L, response.id());
+        assertEquals("Updated title", response.title());
+        assertEquals("Updated text", response.text());
+        assertEquals(List.of("updated_tag"), response.tags());
+        assertEquals(5L, response.likesCount());
+        assertEquals(1L, response.commentsCount());
+    }
+
+    @Test
+    void updatePostShouldThrowWhenPostMissing() {
+        UpdatePostRequest request = new UpdatePostRequest(
+                999L,
+                "Updated title",
+                "Updated text",
+                List.of("updated_tag")
+        );
+
+        assertThrows(PostNotFoundException.class, () -> postService.updatePost(request));
     }
 
     @Test

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.service.PostService;
 
 import java.util.List;
@@ -36,8 +38,17 @@ public class PostController {
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public PostResponse createPost(@RequestBody CreatePostRequest request) {
-        validateCreatePostRequest(request);
+        validatePostPayload(request.title(), request.text(), request.tags());
         return postService.createPost(request);
+    }
+
+    /**
+     * PUT /api/posts/{id}
+     */
+    @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public PostResponse updatePost(@PathVariable("id") long id, @RequestBody UpdatePostRequest request) {
+        validateUpdatePostRequest(id, request);
+        return postService.updatePost(request);
     }
 
     /**
@@ -78,12 +89,18 @@ public class PostController {
         return postService.getCommentsByPostId(id);
     }
 
-    private void validateCreatePostRequest(CreatePostRequest request) {
-        if (request == null
-                || isBlank(request.title())
-                || isBlank(request.text())
-                || request.tags() == null
-                || request.tags().stream().anyMatch(this::isBlank)) {
+    private void validateUpdatePostRequest(long pathId, UpdatePostRequest request) {
+        if (request == null || request.id() != pathId) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Path id must match request body id"
+            );
+        }
+        validatePostPayload(request.title(), request.text(), request.tags());
+    }
+
+    private void validatePostPayload(String title, String text, List<String> tags) {
+        if (isBlank(title) || isBlank(text) || tags == null || tags.stream().anyMatch(this::isBlank)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "title, text and tags are required; tags cannot contain blank values"
