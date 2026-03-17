@@ -82,6 +82,12 @@ public class JdbcPostDao implements PostDao {
     }
 
     @Override
+    public boolean deleteById(long id) {
+        int deletedRows = jdbcTemplate.update("DELETE FROM posts WHERE id = ?", id);
+        return deletedRows > 0;
+    }
+
+    @Override
     public Optional<Post> findById(long id) {
         List<Post> posts = jdbcTemplate.query(
                 "SELECT id, title, text, likes_count, comments_count FROM posts WHERE id = ?",

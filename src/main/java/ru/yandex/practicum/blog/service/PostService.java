@@ -13,6 +13,8 @@ public interface PostService {
 
     PostResponse updatePost(UpdatePostRequest request);
 
+    void deletePost(long id);
+
     PostResponse getPostById(long id);
 
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);

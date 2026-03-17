@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -15,6 +16,7 @@ import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.blog.config.WebMvcConfig;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -100,6 +102,7 @@ class PostControllerMvcTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void postApiPostsShouldCreatePostAndReturnJson() throws Exception {
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,6 +128,7 @@ class PostControllerMvcTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void putApiPostsIdShouldUpdatePostAndReturnJson() throws Exception {
         mockMvc.perform(put("/api/posts/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -162,6 +166,43 @@ class PostControllerMvcTest {
                                   "tags": ["backend", "java"]
                                 }
                                 """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void deleteApiPostsIdShouldDeletePostAndReturnOk() throws Exception {
+        mockMvc.perform(delete("/api/posts/{id}", 1L))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/posts/{id}", 1L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 1 was not found"
+                        }
+                        """, true));
+
+        mockMvc.perform(get("/api/posts/{id}/comments", 1L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 1 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    void deleteApiPostsIdShouldReturn404WhenMissing() throws Exception {
+        mockMvc.perform(delete("/api/posts/{id}", 999L))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""

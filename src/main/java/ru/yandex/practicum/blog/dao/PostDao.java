@@ -21,6 +21,11 @@ public interface PostDao {
      */
     Optional<Post> update(long id, String title, String text, List<String> tags);
 
+    /**
+     * Deletes post aggregate by id.
+     */
+    boolean deleteById(long id);
+
     Optional<Post> findById(long id);
 
     /**

@@ -62,6 +62,11 @@ class DefaultPostServiceTest {
         }
 
         @Override
+        public boolean deleteById(long id) {
+            return id == 1L;
+        }
+
+        @Override
         public Optional<Post> findById(long id) {
             return POSTS.stream()
                     .filter(post -> post.id() == id)
@@ -162,6 +167,16 @@ class DefaultPostServiceTest {
         );
 
         assertThrows(PostNotFoundException.class, () -> postService.updatePost(request));
+    }
+
+    @Test
+    void deletePostShouldCompleteWhenPostExists() {
+        postService.deletePost(1L);
+    }
+
+    @Test
+    void deletePostShouldThrowWhenPostMissing() {
+        assertThrows(PostNotFoundException.class, () -> postService.deletePost(999L));
     }
 
     @Test

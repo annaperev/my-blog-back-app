@@ -44,6 +44,14 @@ public class DefaultPostService implements PostService {
     }
 
     @Override
+    public void deletePost(long id) {
+        boolean deleted = postDao.deleteById(id);
+        if (!deleted) {
+            throw new PostNotFoundException(id);
+        }
+    }
+
+    @Override
     public PostResponse getPostById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
