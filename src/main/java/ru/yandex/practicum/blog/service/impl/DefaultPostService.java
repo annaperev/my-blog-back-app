@@ -52,6 +52,14 @@ public class DefaultPostService implements PostService {
     }
 
     @Override
+    public void updatePostImage(long id, byte[] imageBytes) {
+        if (postDao.findById(id).isEmpty()) {
+            throw new PostNotFoundException(id);
+        }
+        postDao.saveImage(id, imageBytes);
+    }
+
+    @Override
     public PostResponse getPostById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));

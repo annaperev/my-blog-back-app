@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DefaultPostServiceTest {
+    private final byte[][] savedImageHolder = new byte[1][];
 
     // Unit test keeps service independent of real DB by using a test double.
     private static final List<Post> POSTS = List.of(
@@ -64,6 +65,13 @@ class DefaultPostServiceTest {
         @Override
         public boolean deleteById(long id) {
             return id == 1L;
+        }
+
+        @Override
+        public void saveImage(long id, byte[] imageBytes) {
+            if (id == 1L) {
+                savedImageHolder[0] = imageBytes;
+            }
         }
 
         @Override
@@ -177,6 +185,23 @@ class DefaultPostServiceTest {
     @Test
     void deletePostShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.deletePost(999L));
+    }
+
+    @Test
+    void updatePostImageShouldStoreBytesWhenPostExists() {
+        byte[] imageBytes = new byte[]{4, 5, 6};
+
+        postService.updatePostImage(1L, imageBytes);
+
+        assertEquals(3, savedImageHolder[0].length);
+        assertEquals(4, savedImageHolder[0][0]);
+        assertEquals(5, savedImageHolder[0][1]);
+        assertEquals(6, savedImageHolder[0][2]);
+    }
+
+    @Test
+    void updatePostImageShouldThrowWhenPostMissing() {
+        assertThrows(PostNotFoundException.class, () -> postService.updatePostImage(999L, new byte[]{1}));
     }
 
     @Test

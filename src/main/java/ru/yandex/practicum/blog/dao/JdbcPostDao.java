@@ -88,6 +88,16 @@ public class JdbcPostDao implements PostDao {
     }
 
     @Override
+    public void saveImage(long id, byte[] imageBytes) {
+        jdbcTemplate.update("DELETE FROM post_images WHERE post_id = ?", id);
+        jdbcTemplate.update(
+                "INSERT INTO post_images (post_id, image_data) VALUES (?, ?)",
+                id,
+                imageBytes
+        );
+    }
+
+    @Override
     public Optional<Post> findById(long id) {
         List<Post> posts = jdbcTemplate.query(
                 "SELECT id, title, text, likes_count, comments_count FROM posts WHERE id = ?",

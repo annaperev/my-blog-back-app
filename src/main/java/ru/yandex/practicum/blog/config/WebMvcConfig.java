@@ -1,8 +1,11 @@
 package ru.yandex.practicum.blog.config;
 
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -17,6 +20,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Import(DataConfig.class)
 @ComponentScan(basePackages = "ru.yandex.practicum.blog")
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Bean
+    public MultipartResolver multipartResolver() {
+        return new StandardServletMultipartResolver();
+    }
 
     /**
      * CORS (Cross-Origin Resource Sharing) policy for browser clients.

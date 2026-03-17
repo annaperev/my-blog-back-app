@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.blog.dto.CommentResponse;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
@@ -58,6 +59,21 @@ public class PostController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable("id") long id) {
         postService.deletePost(id);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * PUT /api/posts/{id}/image
+     */
+    @PutMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updatePostImage(@PathVariable("id") long id,
+                                                @RequestParam("image") MultipartFile image) {
+        validateImage(image);
+        try {
+            postService.updatePostImage(id, image.getBytes());
+        } catch (java.io.IOException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read uploaded image", ex);
+        }
         return ResponseEntity.ok().build();
     }
 
@@ -120,5 +136,11 @@ public class PostController {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private void validateImage(MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "image file is required");
+        }
     }
 }

@@ -15,6 +15,8 @@ public interface PostService {
 
     void deletePost(long id);
 
+    void updatePostImage(long id, byte[] imageBytes);
+
     PostResponse getPostById(long id);
 
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);

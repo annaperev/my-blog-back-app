@@ -26,6 +26,11 @@ public interface PostDao {
      */
     boolean deleteById(long id);
 
+    /**
+     * Stores or replaces raw image bytes for the post.
+     */
+    void saveImage(long id, byte[] imageBytes);
+
     Optional<Post> findById(long id);
 
     /**
