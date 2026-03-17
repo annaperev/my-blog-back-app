@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreateCommentRequest;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdateCommentRequest;
 import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.service.PostService;
 
@@ -123,14 +125,72 @@ public class PostController {
         return postService.getCommentsByPostId(id);
     }
 
+    /**
+     * GET /api/posts/{id}/comments/{commentId}
+     */
+    @GetMapping("/{id}/comments/{commentId}")
+    public CommentResponse getPostComment(@PathVariable("id") long id,
+                                          @PathVariable("commentId") long commentId) {
+        return postService.getCommentById(id, commentId);
+    }
+
+    /**
+     * POST /api/posts/{id}/comments
+     */
+    @PostMapping(value = "/{id}/comments", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommentResponse createComment(@PathVariable("id") long id, @RequestBody CreateCommentRequest request) {
+        validateCreateCommentRequest(id, request);
+        return postService.createComment(request);
+    }
+
+    /**
+     * PUT /api/posts/{id}/comments/{commentId}
+     */
+    @PutMapping(value = "/{id}/comments/{commentId}", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public CommentResponse updateComment(@PathVariable("id") long id,
+                                         @PathVariable("commentId") long commentId,
+                                         @RequestBody UpdateCommentRequest request) {
+        validateUpdateCommentRequest(id, commentId, request);
+        return postService.updateComment(request);
+    }
+
+    /**
+     * DELETE /api/posts/{id}/comments/{commentId}
+     */
+    @DeleteMapping("/{id}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(@PathVariable("id") long id,
+                                              @PathVariable("commentId") long commentId) {
+        postService.deleteComment(id, commentId);
+        return ResponseEntity.ok().build();
+    }
+
     private void validateUpdatePostRequest(long pathId, UpdatePostRequest request) {
         if (request == null || request.id() != pathId) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+                HttpStatus.BAD_REQUEST,
                     "Path id must match request body id"
             );
         }
         validatePostPayload(request.title(), request.text(), request.tags());
+    }
+
+    private void validateCreateCommentRequest(long pathPostId, CreateCommentRequest request) {
+        if (request == null || request.postId() != pathPostId) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Path id must match request body postId");
+        }
+        validateCommentPayload(request.text());
+    }
+
+    private void validateUpdateCommentRequest(long pathPostId, long pathCommentId, UpdateCommentRequest request) {
+        if (request == null || request.postId() != pathPostId || request.id() != pathCommentId) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Path ids must match request body ids"
+            );
+        }
+        validateCommentPayload(request.text());
     }
 
     private void validatePostPayload(String title, String text, List<String> tags) {
@@ -144,6 +204,12 @@ public class PostController {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private void validateCommentPayload(String text) {
+        if (isBlank(text)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "text is required");
+        }
     }
 
     private void validateImage(MultipartFile image) {

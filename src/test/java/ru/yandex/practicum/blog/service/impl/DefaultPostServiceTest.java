@@ -3,12 +3,15 @@ package ru.yandex.practicum.blog.service.impl;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.blog.dao.PostDao;
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreateCommentRequest;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdateCommentRequest;
 import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
+import ru.yandex.practicum.blog.service.CommentNotFoundException;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
 import ru.yandex.practicum.blog.service.PostService;
 
@@ -80,6 +83,31 @@ class DefaultPostServiceTest {
                 return Optional.of(6L);
             }
             return Optional.empty();
+        }
+
+        @Override
+        public Optional<Comment> findCommentById(long postId, long commentId) {
+            return COMMENTS.stream()
+                    .filter(comment -> comment.postId() == postId && comment.id() == commentId)
+                    .findFirst();
+        }
+
+        @Override
+        public Comment createComment(long postId, String text) {
+            return new Comment(4L, text, postId);
+        }
+
+        @Override
+        public Optional<Comment> updateComment(long postId, long commentId, String text) {
+            if (postId == 1L && commentId == 1L) {
+                return Optional.of(new Comment(commentId, text, postId));
+            }
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean deleteComment(long postId, long commentId) {
+            return postId == 1L && commentId == 1L;
         }
 
         @Override
@@ -222,6 +250,59 @@ class DefaultPostServiceTest {
     @Test
     void incrementLikesShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.incrementLikes(999L));
+    }
+
+    @Test
+    void getCommentByIdShouldReturnComment() {
+        CommentResponse response = postService.getCommentById(1L, 1L);
+
+        assertEquals(1L, response.id());
+        assertEquals("First comment", response.text());
+        assertEquals(1L, response.postId());
+    }
+
+    @Test
+    void getCommentByIdShouldThrowWhenCommentMissing() {
+        assertThrows(CommentNotFoundException.class, () -> postService.getCommentById(1L, 999L));
+    }
+
+    @Test
+    void createCommentShouldReturnCreatedComment() {
+        CreateCommentRequest request = new CreateCommentRequest("New comment", 1L);
+
+        CommentResponse response = postService.createComment(request);
+
+        assertEquals(4L, response.id());
+        assertEquals("New comment", response.text());
+        assertEquals(1L, response.postId());
+    }
+
+    @Test
+    void updateCommentShouldReturnUpdatedComment() {
+        UpdateCommentRequest request = new UpdateCommentRequest(1L, "Updated comment", 1L);
+
+        CommentResponse response = postService.updateComment(request);
+
+        assertEquals(1L, response.id());
+        assertEquals("Updated comment", response.text());
+        assertEquals(1L, response.postId());
+    }
+
+    @Test
+    void updateCommentShouldThrowWhenCommentMissing() {
+        UpdateCommentRequest request = new UpdateCommentRequest(999L, "Updated comment", 1L);
+
+        assertThrows(CommentNotFoundException.class, () -> postService.updateComment(request));
+    }
+
+    @Test
+    void deleteCommentShouldCompleteWhenCommentExists() {
+        postService.deleteComment(1L, 1L);
+    }
+
+    @Test
+    void deleteCommentShouldThrowWhenCommentMissing() {
+        assertThrows(CommentNotFoundException.class, () -> postService.deleteComment(1L, 999L));
     }
 
     @Test

@@ -36,6 +36,26 @@ public interface PostDao {
      */
     Optional<Long> incrementLikes(long id);
 
+    /**
+     * Reads one nested comment for a post.
+     */
+    Optional<Comment> findCommentById(long postId, long commentId);
+
+    /**
+     * Creates a new comment and returns persisted data with generated id.
+     */
+    Comment createComment(long postId, String text);
+
+    /**
+     * Updates comment text under the post.
+     */
+    Optional<Comment> updateComment(long postId, long commentId, String text);
+
+    /**
+     * Deletes one comment under the post.
+     */
+    boolean deleteComment(long postId, long commentId);
+
     Optional<Post> findById(long id);
 
     /**

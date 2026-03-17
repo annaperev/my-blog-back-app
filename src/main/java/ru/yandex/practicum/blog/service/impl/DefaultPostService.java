@@ -3,12 +3,15 @@ package ru.yandex.practicum.blog.service.impl;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.blog.dao.PostDao;
 import ru.yandex.practicum.blog.dto.CommentResponse;
+import ru.yandex.practicum.blog.dto.CreateCommentRequest;
 import ru.yandex.practicum.blog.dto.CreatePostRequest;
 import ru.yandex.practicum.blog.dto.PostPageResponse;
 import ru.yandex.practicum.blog.dto.PostResponse;
+import ru.yandex.practicum.blog.dto.UpdateCommentRequest;
 import ru.yandex.practicum.blog.dto.UpdatePostRequest;
 import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
+import ru.yandex.practicum.blog.service.CommentNotFoundException;
 import ru.yandex.practicum.blog.service.PostNotFoundException;
 import ru.yandex.practicum.blog.service.PostService;
 
@@ -66,6 +69,38 @@ public class DefaultPostService implements PostService {
     }
 
     @Override
+    public CommentResponse getCommentById(long postId, long commentId) {
+        ensurePostExists(postId);
+        Comment comment = postDao.findCommentById(postId, commentId)
+                .orElseThrow(() -> new CommentNotFoundException(postId, commentId));
+        return toCommentResponse(comment);
+    }
+
+    @Override
+    public CommentResponse createComment(CreateCommentRequest request) {
+        ensurePostExists(request.postId());
+        Comment createdComment = postDao.createComment(request.postId(), request.text());
+        return toCommentResponse(createdComment);
+    }
+
+    @Override
+    public CommentResponse updateComment(UpdateCommentRequest request) {
+        ensurePostExists(request.postId());
+        Comment updatedComment = postDao.updateComment(request.postId(), request.id(), request.text())
+                .orElseThrow(() -> new CommentNotFoundException(request.postId(), request.id()));
+        return toCommentResponse(updatedComment);
+    }
+
+    @Override
+    public void deleteComment(long postId, long commentId) {
+        ensurePostExists(postId);
+        boolean deleted = postDao.deleteComment(postId, commentId);
+        if (!deleted) {
+            throw new CommentNotFoundException(postId, commentId);
+        }
+    }
+
+    @Override
     public PostResponse getPostById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
@@ -105,9 +140,7 @@ public class DefaultPostService implements PostService {
 
     @Override
     public byte[] getPostImage(long id) {
-        if (postDao.findById(id).isEmpty()) {
-            throw new PostNotFoundException(id);
-        }
+        ensurePostExists(id);
 
         return postDao.findImageByPostId(id)
                 .orElse(DEFAULT_IMAGE_BYTES);
@@ -115,9 +148,7 @@ public class DefaultPostService implements PostService {
 
     @Override
     public List<CommentResponse> getCommentsByPostId(long postId) {
-        if (postDao.findById(postId).isEmpty()) {
-            throw new PostNotFoundException(postId);
-        }
+        ensurePostExists(postId);
 
         return postDao.findCommentsByPostId(postId).stream()
                 .map(this::toCommentResponse)
@@ -148,5 +179,11 @@ public class DefaultPostService implements PostService {
                 comment.text(),
                 comment.postId()
         );
+    }
+
+    private void ensurePostExists(long postId) {
+        if (postDao.findById(postId).isEmpty()) {
+            throw new PostNotFoundException(postId);
+        }
     }
 }

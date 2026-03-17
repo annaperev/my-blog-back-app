@@ -68,7 +68,7 @@ class PostControllerMvcTest {
                             {
                               "id": 2,
                               "likesCount": 2,
-                              "commentsCount": 2
+                              "commentsCount": 0
                             }
                           ],
                           "hasPrev": false,
@@ -323,6 +323,162 @@ class PostControllerMvcTest {
                             "postId": 1
                           }
                         ]
+                        """, true));
+    }
+
+    @Test
+    void getApiPostsIdCommentsCommentIdShouldReturnCommentJson() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/comments/{commentId}", 1L, 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "id": 1,
+                          "text": "Comment for post 1",
+                          "postId": 1
+                        }
+                        """, true));
+    }
+
+    @Test
+    void getApiPostsIdCommentsCommentIdShouldReturn404WhenCommentMissing() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/comments/{commentId}", 1L, 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Comment with id 999 for post with id 1 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void postApiPostsIdCommentsShouldCreateCommentAndReturnJson() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/comments", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "New comment",
+                                  "postId": 1
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "id": 2,
+                          "text": "New comment",
+                          "postId": 1
+                        }
+                        """, true));
+
+        mockMvc.perform(get("/api/posts/{id}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                          "id": 1,
+                          "commentsCount": 2
+                        }
+                        """, false));
+    }
+
+    @Test
+    void postApiPostsIdCommentsShouldReturn404WhenPostMissing() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/comments", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "text": "New comment",
+                                  "postId": 999
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void putApiPostsIdCommentsCommentIdShouldUpdateCommentAndReturnJson() throws Exception {
+        mockMvc.perform(put("/api/posts/{id}/comments/{commentId}", 1L, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 1,
+                                  "text": "Updated comment",
+                                  "postId": 1
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "id": 1,
+                          "text": "Updated comment",
+                          "postId": 1
+                        }
+                        """, true));
+    }
+
+    @Test
+    void putApiPostsIdCommentsCommentIdShouldReturn404WhenCommentMissing() throws Exception {
+        mockMvc.perform(put("/api/posts/{id}/comments/{commentId}", 1L, 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "id": 999,
+                                  "text": "Updated comment",
+                                  "postId": 1
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Comment with id 999 for post with id 1 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void deleteApiPostsIdCommentsCommentIdShouldDeleteCommentAndReturnOk() throws Exception {
+        mockMvc.perform(delete("/api/posts/{id}/comments/{commentId}", 1L, 1L))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/posts/{id}/comments/{commentId}", 1L, 1L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Comment with id 1 for post with id 1 was not found"
+                        }
+                        """, true));
+
+        mockMvc.perform(get("/api/posts/{id}", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        {
+                          "id": 1,
+                          "commentsCount": 0
+                        }
+                        """, false));
+    }
+
+    @Test
+    void deleteApiPostsIdCommentsCommentIdShouldReturn404WhenCommentMissing() throws Exception {
+        mockMvc.perform(delete("/api/posts/{id}/comments/{commentId}", 1L, 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Comment with id 999 for post with id 1 was not found"
+                        }
                         """, true));
     }
 
