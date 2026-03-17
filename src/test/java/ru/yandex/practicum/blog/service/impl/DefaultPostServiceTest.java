@@ -75,6 +75,14 @@ class DefaultPostServiceTest {
         }
 
         @Override
+        public Optional<Long> incrementLikes(long id) {
+            if (id == 1L) {
+                return Optional.of(6L);
+            }
+            return Optional.empty();
+        }
+
+        @Override
         public Optional<Post> findById(long id) {
             return POSTS.stream()
                     .filter(post -> post.id() == id)
@@ -202,6 +210,18 @@ class DefaultPostServiceTest {
     @Test
     void updatePostImageShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.updatePostImage(999L, new byte[]{1}));
+    }
+
+    @Test
+    void incrementLikesShouldReturnUpdatedCount() {
+        long likesCount = postService.incrementLikes(1L);
+
+        assertEquals(6L, likesCount);
+    }
+
+    @Test
+    void incrementLikesShouldThrowWhenPostMissing() {
+        assertThrows(PostNotFoundException.class, () -> postService.incrementLikes(999L));
     }
 
     @Test

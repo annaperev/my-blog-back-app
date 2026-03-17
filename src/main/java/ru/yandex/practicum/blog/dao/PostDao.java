@@ -31,6 +31,11 @@ public interface PostDao {
      */
     void saveImage(long id, byte[] imageBytes);
 
+    /**
+     * Adds one like and returns updated likes count.
+     */
+    Optional<Long> incrementLikes(long id);
+
     Optional<Post> findById(long id);
 
     /**

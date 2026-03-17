@@ -78,6 +78,14 @@ public class PostController {
     }
 
     /**
+     * POST /api/posts/{id}/likes
+     */
+    @PostMapping(value = "/{id}/likes", produces = MediaType.APPLICATION_JSON_VALUE)
+    public long incrementLikes(@PathVariable("id") long id) {
+        return postService.incrementLikes(id);
+    }
+
+    /**
      * GET /api/posts?search=...&pageNumber=...&pageSize=...
      */
     @GetMapping

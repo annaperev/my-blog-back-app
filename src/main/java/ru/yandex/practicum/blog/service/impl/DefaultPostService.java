@@ -60,6 +60,12 @@ public class DefaultPostService implements PostService {
     }
 
     @Override
+    public long incrementLikes(long id) {
+        return postDao.incrementLikes(id)
+                .orElseThrow(() -> new PostNotFoundException(id));
+    }
+
+    @Override
     public PostResponse getPostById(long id) {
         Post post = postDao.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));

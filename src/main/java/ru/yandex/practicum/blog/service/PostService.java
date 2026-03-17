@@ -17,6 +17,8 @@ public interface PostService {
 
     void updatePostImage(long id, byte[] imageBytes);
 
+    long incrementLikes(long id);
+
     PostResponse getPostById(long id);
 
     PostPageResponse getPosts(String search, int pageNumber, int pageSize);

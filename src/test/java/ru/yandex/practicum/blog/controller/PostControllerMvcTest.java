@@ -217,6 +217,27 @@ class PostControllerMvcTest {
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void postApiPostsIdLikesShouldIncrementLikesAndReturnUpdatedCount() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/likes", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(result -> assertEquals("6", result.getResponse().getContentAsString()));
+    }
+
+    @Test
+    void postApiPostsIdLikesShouldReturn404WhenPostMissing() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/likes", 999L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "message": "Post with id 999 was not found"
+                        }
+                        """, true));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     void putApiPostsIdImageShouldStoreImageAndReturnOk() throws Exception {
         MockMultipartFile image = new MockMultipartFile(
                 "image",

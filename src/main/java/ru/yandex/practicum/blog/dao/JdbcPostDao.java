@@ -98,6 +98,24 @@ public class JdbcPostDao implements PostDao {
     }
 
     @Override
+    public Optional<Long> incrementLikes(long id) {
+        int updatedRows = jdbcTemplate.update(
+                "UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?",
+                id
+        );
+        if (updatedRows == 0) {
+            return Optional.empty();
+        }
+
+        Long likesCount = jdbcTemplate.queryForObject(
+                "SELECT likes_count FROM posts WHERE id = ?",
+                Long.class,
+                id
+        );
+        return Optional.ofNullable(likesCount);
+    }
+
+    @Override
     public Optional<Post> findById(long id) {
         List<Post> posts = jdbcTemplate.query(
                 "SELECT id, title, text, likes_count, comments_count FROM posts WHERE id = ?",
