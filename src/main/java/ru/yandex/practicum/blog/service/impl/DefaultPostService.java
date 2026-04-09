@@ -120,13 +120,12 @@ public class DefaultPostService implements PostService {
 
     @Override
     public PostPageResponse getPosts(String search, int pageNumber, int pageSize) {
-        long totalPosts = postDao.countAll();
+        long totalPosts = postDao.countAll(search);
         int lastPage = totalPosts == 0
                 ? 1
                 : (int) ((totalPosts + pageSize - 1) / pageSize);
 
-        // filtering with "search" parameter is postponed to next step.
-        List<PostResponse> posts = postDao.findPage(pageNumber, pageSize).stream()
+        List<PostResponse> posts = postDao.findPage(search, pageNumber, pageSize).stream()
                 .map(this::toFeedResponse)
                 .toList();
 

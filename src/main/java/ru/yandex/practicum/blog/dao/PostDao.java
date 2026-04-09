@@ -59,15 +59,14 @@ public interface PostDao {
     Optional<Post> findById(long id);
 
     /**
-     * Returns one page of posts in feed order.
-     * For now, search filtering is intentionally not applied yet.
+     * Returns one page of posts in feed order with optional search filtering.
      */
-    List<Post> findPage(int pageNumber, int pageSize);
+    List<Post> findPage(String search, int pageNumber, int pageSize);
 
     /**
-     * Total amount of posts, used to calculate paging metadata.
+     * Total amount of posts for paging metadata with optional search filtering.
      */
-    long countAll();
+    long countAll(String search);
 
     /**
      * Reads raw image bytes linked to a post id.

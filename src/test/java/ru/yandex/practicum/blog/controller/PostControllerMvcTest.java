@@ -52,7 +52,7 @@ class PostControllerMvcTest {
     @Test
     void getApiPostsShouldReturnPagedFeedJson() throws Exception {
         mockMvc.perform(get("/api/posts")
-                        .param("search", "anything")
+                        .param("search", "")
                         .param("pageNumber", "1")
                         .param("pageSize", "5"))
                 .andExpect(status().isOk())
@@ -69,6 +69,54 @@ class PostControllerMvcTest {
                               "id": 2,
                               "likesCount": 2,
                               "commentsCount": 0
+                            }
+                          ],
+                          "hasPrev": false,
+                          "hasNext": false,
+                          "lastPage": 1
+                        }
+                        """, false));
+    }
+
+    @Test
+    void getApiPostsShouldFilterBySearchValue() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "#tag_2")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "posts": [
+                            {
+                              "id": 1,
+                              "likesCount": 5,
+                              "commentsCount": 1
+                            }
+                          ],
+                          "hasPrev": false,
+                          "hasNext": false,
+                          "lastPage": 1
+                        }
+                        """, false));
+    }
+
+    @Test
+    void getApiPostsShouldApplyAndBetweenTitleAndTags() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "Название #tag_1 #tag_2")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("""
+                        {
+                          "posts": [
+                            {
+                              "id": 1,
+                              "likesCount": 5,
+                              "commentsCount": 1
                             }
                           ],
                           "hasPrev": false,

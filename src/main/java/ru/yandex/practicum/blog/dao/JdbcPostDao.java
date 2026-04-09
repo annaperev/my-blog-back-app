@@ -8,6 +8,7 @@ import ru.yandex.practicum.blog.model.Comment;
 import ru.yandex.practicum.blog.model.Post;
 
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -229,12 +230,20 @@ public class JdbcPostDao implements PostDao {
     }
 
     @Override
-    public List<Post> findPage(int pageNumber, int pageSize) {
+    public List<Post> findPage(String search, int pageNumber, int pageSize) {
         long offset = (long) (pageNumber - 1) * pageSize;
+        SearchCriteria searchCriteria = parseSearch(search);
+        List<Object> parameters = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT p.id, p.title, p.text, p.likes_count, p.comments_count FROM posts p WHERE 1=1"
+        );
+        appendSearchConditions(sql, parameters, searchCriteria);
+        sql.append(" ORDER BY p.id DESC LIMIT ? OFFSET ?");
+        parameters.add(pageSize);
+        parameters.add(offset);
 
         List<Post> postsWithoutTags = jdbcTemplate.query(
-                "SELECT id, title, text, likes_count, comments_count " +
-                        "FROM posts ORDER BY id DESC LIMIT ? OFFSET ?",
+                sql.toString(),
                 (resultSet, ignoredRowNum) -> new Post(
                         resultSet.getLong("id"),
                         resultSet.getString("title"),
@@ -243,16 +252,24 @@ public class JdbcPostDao implements PostDao {
                         resultSet.getLong("likes_count"),
                         resultSet.getLong("comments_count")
                 ),
-                pageSize,
-                offset
+                parameters.toArray()
         );
 
         return attachTags(postsWithoutTags);
     }
 
     @Override
-    public long countAll() {
-        Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM posts", Long.class);
+    public long countAll(String search) {
+        SearchCriteria searchCriteria = parseSearch(search);
+        List<Object> parameters = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM posts p WHERE 1=1");
+        appendSearchConditions(sql, parameters, searchCriteria);
+
+        Long count = jdbcTemplate.queryForObject(
+                sql.toString(),
+                Long.class,
+                parameters.toArray()
+        );
         return count == null ? 0L : count;
     }
 
@@ -327,5 +344,54 @@ public class JdbcPostDao implements PostDao {
     }
 
     private record TagRow(long postId, String tag) {
+    }
+
+    private void appendSearchConditions(StringBuilder sql, List<Object> parameters, SearchCriteria searchCriteria) {
+        if (searchCriteria.titleSearch() != null) {
+            sql.append(" AND LOWER(p.title) LIKE ?");
+            parameters.add(searchCriteria.titleSearch());
+        }
+
+        for (int i = 0; i < searchCriteria.requiredTags().size(); i++) {
+            sql.append(" AND EXISTS (")
+                    .append("SELECT 1 FROM post_tags pt").append(i)
+                    .append(" WHERE pt").append(i).append(".post_id = p.id")
+                    .append(" AND LOWER(pt").append(i).append(".tag) = ?")
+                    .append(")");
+            parameters.add(searchCriteria.requiredTags().get(i));
+        }
+    }
+
+    private SearchCriteria parseSearch(String search) {
+        if (search == null || search.isBlank()) {
+            return new SearchCriteria(null, List.of());
+        }
+
+        List<String> titleTerms = new ArrayList<>();
+        List<String> tagTerms = new ArrayList<>();
+        for (String word : search.trim().split("\\s+")) {
+            if (word.isBlank()) {
+                continue;
+            }
+
+            if (word.startsWith("#")) {
+                String tag = word.substring(1).trim().toLowerCase();
+                if (!tag.isBlank()) {
+                    tagTerms.add(tag);
+                }
+                continue;
+            }
+
+            titleTerms.add(word);
+        }
+
+        String titleSearch = titleTerms.isEmpty()
+                ? null
+                : "%" + String.join(" ", titleTerms).toLowerCase() + "%";
+
+        return new SearchCriteria(titleSearch, tagTerms.stream().distinct().toList());
+    }
+
+    private record SearchCriteria(String titleSearch, List<String> requiredTags) {
     }
 }

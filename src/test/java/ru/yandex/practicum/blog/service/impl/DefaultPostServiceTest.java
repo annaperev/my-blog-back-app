@@ -118,15 +118,20 @@ class DefaultPostServiceTest {
         }
 
         @Override
-        public List<Post> findPage(int pageNumber, int pageSize) {
-            int fromIndex = Math.min((pageNumber - 1) * pageSize, POSTS.size());
-            int toIndex = Math.min(fromIndex + pageSize, POSTS.size());
-            return POSTS.subList(fromIndex, toIndex);
+        public List<Post> findPage(String search, int pageNumber, int pageSize) {
+            List<Post> filteredPosts = POSTS.stream()
+                    .filter(post -> matchesSearchRules(post, search))
+                    .toList();
+            int fromIndex = Math.min((pageNumber - 1) * pageSize, filteredPosts.size());
+            int toIndex = Math.min(fromIndex + pageSize, filteredPosts.size());
+            return filteredPosts.subList(fromIndex, toIndex);
         }
 
         @Override
-        public long countAll() {
-            return POSTS.size();
+        public long countAll(String search) {
+            return POSTS.stream()
+                    .filter(post -> matchesSearchRules(post, search))
+                    .count();
         }
 
         @Override
@@ -307,13 +312,40 @@ class DefaultPostServiceTest {
 
     @Test
     void getPostsShouldReturnPageAndApplyFeedTruncation() {
-        PostPageResponse response = postService.getPosts("ignored now", 1, 1);
+        PostPageResponse response = postService.getPosts("", 1, 1);
 
         assertEquals(1, response.posts().size());
         assertEquals("a".repeat(128) + "\u2026", response.posts().getFirst().text());
         assertFalse(response.hasPrev());
         assertTrue(response.hasNext());
         assertEquals(2, response.lastPage());
+    }
+
+    @Test
+    void getPostsShouldFilterByHashTagTokens() {
+        PostPageResponse response = postService.getPosts("#tag_2", 1, 10);
+
+        assertEquals(1, response.posts().size());
+        assertEquals(1L, response.posts().getFirst().id());
+        assertFalse(response.hasPrev());
+        assertFalse(response.hasNext());
+        assertEquals(1, response.lastPage());
+    }
+
+    @Test
+    void getPostsShouldApplyAndRulesForTitleAndTags() {
+        PostPageResponse response = postService.getPosts("First #tag_1 #tag_2", 1, 10);
+
+        assertEquals(1, response.posts().size());
+        assertEquals(1L, response.posts().getFirst().id());
+    }
+
+    @Test
+    void getPostsShouldNotMatchWhenTagRequirementFails() {
+        PostPageResponse response = postService.getPosts("First #missing_tag", 1, 10);
+
+        assertEquals(0, response.posts().size());
+        assertEquals(1, response.lastPage());
     }
 
     @Test
@@ -341,5 +373,50 @@ class DefaultPostServiceTest {
     @Test
     void getCommentsByPostIdShouldThrowWhenPostMissing() {
         assertThrows(PostNotFoundException.class, () -> postService.getCommentsByPostId(999L));
+    }
+
+    private boolean matchesSearchRules(Post post, String search) {
+        SearchTerms searchTerms = parseSearch(search);
+        if (searchTerms.titleSubstring() == null && searchTerms.requiredTags().isEmpty()) {
+            return true;
+        }
+
+        boolean matchesTitle = searchTerms.titleSubstring() == null
+                || post.title().toLowerCase().contains(searchTerms.titleSubstring());
+        boolean matchesTags = searchTerms.requiredTags().stream()
+                .allMatch(requiredTag -> post.tags().stream()
+                        .anyMatch(tag -> tag.equalsIgnoreCase(requiredTag)));
+
+        return matchesTitle && matchesTags;
+    }
+
+    private SearchTerms parseSearch(String search) {
+        if (search == null || search.isBlank()) {
+            return new SearchTerms(null, List.of());
+        }
+
+        List<String> titleWords = new java.util.ArrayList<>();
+        List<String> requiredTags = new java.util.ArrayList<>();
+        for (String word : search.trim().split("\\s+")) {
+            if (word.isBlank()) {
+                continue;
+            }
+
+            if (word.startsWith("#")) {
+                String tag = word.substring(1).trim().toLowerCase();
+                if (!tag.isBlank()) {
+                    requiredTags.add(tag);
+                }
+                continue;
+            }
+
+            titleWords.add(word);
+        }
+
+        String titleSubstring = titleWords.isEmpty() ? null : String.join(" ", titleWords).toLowerCase();
+        return new SearchTerms(titleSubstring, requiredTags.stream().distinct().toList());
+    }
+
+    private record SearchTerms(String titleSubstring, List<String> requiredTags) {
     }
 }
