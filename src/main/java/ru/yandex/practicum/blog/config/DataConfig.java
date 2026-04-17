@@ -6,9 +6,12 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.DataSourceInitializer;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 
@@ -17,6 +20,7 @@ import javax.sql.DataSource;
  * Common enterprise pattern: externalize DB settings to properties and initialize schema via SQL scripts.
  */
 @Configuration
+@EnableTransactionManagement
 @PropertySource("classpath:application.properties")
 public class DataConfig {
 
@@ -47,5 +51,10 @@ public class DataConfig {
         initializer.setDataSource(dataSource);
         initializer.setDatabasePopulator(populator);
         return initializer;
+    }
+
+    @Bean
+    public PlatformTransactionManager transactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource); // 2. сам менеджер
     }
 }

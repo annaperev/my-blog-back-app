@@ -7,12 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 import ru.yandex.practicum.blog.config.WebMvcConfig;
 
@@ -153,7 +153,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void postApiPostsShouldCreatePostAndReturnJson() throws Exception {
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -179,7 +179,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void putApiPostsIdShouldUpdatePostAndReturnJson() throws Exception {
         mockMvc.perform(put("/api/posts/{id}", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -227,7 +227,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void deleteApiPostsIdShouldDeletePostAndReturnOk() throws Exception {
         mockMvc.perform(delete("/api/posts/{id}", 1L))
                 .andExpect(status().isOk());
@@ -264,7 +264,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void postApiPostsIdLikesShouldIncrementLikesAndReturnUpdatedCount() throws Exception {
         mockMvc.perform(post("/api/posts/{id}/likes", 1L))
                 .andExpect(status().isOk())
@@ -285,7 +285,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void putApiPostsIdImageShouldStoreImageAndReturnOk() throws Exception {
         MockMultipartFile image = new MockMultipartFile(
                 "image",
@@ -401,7 +401,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void postApiPostsIdCommentsShouldCreateCommentAndReturnJson() throws Exception {
         mockMvc.perform(post("/api/posts/{id}/comments", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -451,7 +451,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void putApiPostsIdCommentsCommentIdShouldUpdateCommentAndReturnJson() throws Exception {
         mockMvc.perform(put("/api/posts/{id}/comments/{commentId}", 1L, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -494,7 +494,7 @@ class PostControllerMvcTest {
     }
 
     @Test
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    @Transactional
     void deleteApiPostsIdCommentsCommentIdShouldDeleteCommentAndReturnOk() throws Exception {
         mockMvc.perform(delete("/api/posts/{id}/comments/{commentId}", 1L, 1L))
                 .andExpect(status().isOk());
